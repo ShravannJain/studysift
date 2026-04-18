@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudySift</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; background: #0f0f13; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+  h1 { font-size: 2rem; font-weight: 700; margin-bottom: 6px; }
+  h1 span { color: #7c6af7; }
+  .sub { color: #888; margin-bottom: 32px; font-size: 0.95rem; }
+  .search-box { display: flex; gap: 10px; width: 100%; max-width: 620px; margin-bottom: 40px; }
+  input { flex: 1; padding: 14px 18px; border-radius: 12px; border: 1.5px solid #2a2a3a; background: #1a1a24; color: #fff; font-size: 1rem; outline: none; transition: border 0.2s; }
+  input:focus { border-color: #7c6af7; }
+  button { padding: 14px 24px; background: #7c6af7; color: #fff; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  button:hover { background: #6a58e0; }
+  button:disabled { background: #444; cursor: not-allowed; }
+  .card { background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 16px; padding: 28px; width: 100%; max-width: 620px; display: none; }
+  .verdict { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 1.05rem; }
+  .verdict.yes { background: #0d2a1a; color: #4ade80; border: 1px solid #166534; }
+  .verdict.no { background: #2a0d0d; color: #f87171; border: 1px solid #991b1b; }
+  .verdict-icon { font-size: 1.5rem; }
+  .summary { color: #ccc; line-height: 1.6; margin-bottom: 20px; font-size: 0.95rem; }
+  .tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .tag { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
+  .tag.difficulty { background: #2a1f4a; color: #a78bfa; }
+  .tag.keyword { background: #1a2a3a; color: #60a5fa; }
+  .score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .score-label { color: #888; font-size: 0.85rem; white-space: nowrap; }
+  .score-bar { flex: 1; height: 8px; background: #2a2a3a; border-radius: 4px; overflow: hidden; }
+  .score-fill { height: 100%; background: #7c6af7; border-radius: 4px; transition: width 1s ease; }
+  .score-num { font-weight: 700; color: #7c6af7; font-size: 0.9rem; min-width: 32px; }
+  .segments h3 { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .segment { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a3a; font-size: 0.9rem; }
+  .segment:last-child { border-bottom: none; }
+  .time { color: #7c6af7; font-weight: 600; font-family: monospace; white-space: nowrap; }
+  .topic { color: #ddd; }
+  .spinner { display: none; flex-direction: column; align-items: center; gap: 12px; color: #888; }
+  .spin { width: 36px; height: 36px; border: 3px solid #2a2a3a; border-top-color: #7c6af7; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<h1>Study<span>Sift</span></h1>
+<p class="sub">Should you watch this? Find out in seconds.</p>
+
+<div class="search-box">
+  <input id="url" type="text" placeholder="Paste a YouTube URL..." />
+  <button id="btn" onclick="analyze()">Analyze</button>
+</div>
+
+<div class="spinner" id="spinner">
+  <div class="spin"></div>
+  <span>Analyzing video...</span>
+</div>
+
+<div class="card" id="card">
+  <div class="verdict" id="verdict">
+    <span class="verdict-icon" id="verdict-icon"></span>
+    <span id="verdict-text"></span>
+  </div>
+  <p class="summary" id="summary"></p>
+  <div class="tags" id="tags"></div>
+  <div class="score-row">
+    <span class="score-label">Efficiency score</span>
+    <div class="score-bar"><div class="score-fill" id="score-fill" style="width:0%"></div></div>
+    <span class="score-num" id="score-num">0</span>
+  </div>
+  <div class="segments">
+    <h3>Key segments</h3>
+    <div id="segments"></div>
+  </div>
+</div>
+
+<script>
+async function analyze() {
+  const url = document.getElementById('url').value.trim();
+  if (!url) return;
+  document.getElementById('btn').disabled = true;
+  document.getElementById('card').style.display = 'none';
+  document.getElementById('spinner').style.display = 'flex';
+
+  try {
+    const res = await fetch('http://localhost:8000/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+
+    const verdict = document.getElementById('verdict');
+    verdict.className = 'verdict ' + (data.should_watch ? 'yes' : 'no');
+    document.getElementById('verdict-icon').textContent = data.should_watch ? '✅' : '⛔';
+    document.getElementById('verdict-text').textContent = data.should_watch ? 'Yes, watch this — ' + data.reason : 'Skip it — ' + data.reason;
+    document.getElementById('summary').textContent = data.summary;
+
+    const tags = document.getElementById('tags');
+    tags.innerHTML = `<span class="tag difficulty">${data.difficulty}</span>` +
+      data.keywords.map(k => `<span class="tag keyword">${k}</span>`).join('');
+
+    document.getElementById('score-num').textContent = data.efficiency_score + '%';
+    setTimeout(() => document.getElementById('score-fill').style.width = data.efficiency_score + '%', 100);
+
+    const segs = document.getElementById('segments');
+    segs.innerHTML = data.useful_segments.length
+      ? data.useful_segments.map(s => `<div class="segment"><span class="time">${s.start} → ${s.end}</span><span class="topic">${s.topic}</span></div>`).join('')
+      : '<p style="color:#555;font-size:0.9rem">No key segments found</p>';
+
+    document.getElementById('card').style.display = 'block';
+  } catch(e) {
+    alert('Error: ' + e.message);
+  } finally {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('btn').disabled = false;
+  }
+}
+
+document.getElementById('url').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
+</script>
+</body>
+</html>
