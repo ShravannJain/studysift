@@ -4,119 +4,442 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StudySift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: system-ui, sans-serif; background: #0f0f13; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
-  h1 { font-size: 2rem; font-weight: 700; margin-bottom: 6px; }
-  h1 span { color: #7c6af7; }
-  .sub { color: #888; margin-bottom: 32px; font-size: 0.95rem; }
-  .search-box { display: flex; gap: 10px; width: 100%; max-width: 620px; margin-bottom: 40px; }
-  input { flex: 1; padding: 14px 18px; border-radius: 12px; border: 1.5px solid #2a2a3a; background: #1a1a24; color: #fff; font-size: 1rem; outline: none; transition: border 0.2s; }
-  input:focus { border-color: #7c6af7; }
-  button { padding: 14px 24px; background: #7c6af7; color: #fff; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-  button:hover { background: #6a58e0; }
-  button:disabled { background: #444; cursor: not-allowed; }
-  .card { background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 16px; padding: 28px; width: 100%; max-width: 620px; display: none; }
-  .verdict { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 1.05rem; }
-  .verdict.yes { background: #0d2a1a; color: #4ade80; border: 1px solid #166534; }
-  .verdict.no { background: #2a0d0d; color: #f87171; border: 1px solid #991b1b; }
-  .verdict-icon { font-size: 1.5rem; }
-  .summary { color: #ccc; line-height: 1.6; margin-bottom: 20px; font-size: 0.95rem; }
-  .tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-  .tag { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
-  .tag.difficulty { background: #2a1f4a; color: #a78bfa; }
-  .tag.keyword { background: #1a2a3a; color: #60a5fa; }
-  .score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-  .score-label { color: #888; font-size: 0.85rem; white-space: nowrap; }
-  .score-bar { flex: 1; height: 8px; background: #2a2a3a; border-radius: 4px; overflow: hidden; }
-  .score-fill { height: 100%; background: #7c6af7; border-radius: 4px; transition: width 1s ease; }
-  .score-num { font-weight: 700; color: #7c6af7; font-size: 0.9rem; min-width: 32px; }
-  .segments h3 { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
-  .segment { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a3a; font-size: 0.9rem; }
-  .segment:last-child { border-bottom: none; }
-  .time { color: #7c6af7; font-weight: 600; font-family: monospace; white-space: nowrap; }
-  .topic { color: #ddd; }
-  .spinner { display: none; flex-direction: column; align-items: center; gap: 12px; color: #888; }
-  .spin { width: 36px; height: 36px; border: 3px solid #2a2a3a; border-top-color: #7c6af7; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #080810;
+    --surface: #0e0e1a;
+    --surface-2: #13131f;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+    --accent: #6c63ff;
+    --accent-2: #a78bfa;
+    --accent-dim: rgba(108,99,255,0.15);
+    --text: #f0eeff;
+    --muted: #7a7a9a;
+    --muted-2: #4a4a6a;
+    --green: #34d399;
+    --green-bg: rgba(52,211,153,0.08);
+    --green-border: rgba(52,211,153,0.2);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.08);
+    --red-border: rgba(248,113,113,0.2);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px 80px;
+    background-image:
+      radial-gradient(ellipse 60% 40% at 50% -10%, rgba(108,99,255,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 80% 80%, rgba(167,139,250,0.07) 0%, transparent 60%);
+  }
+
+  /* ── Header ── */
+  .header { text-align: center; margin-bottom: 48px; }
+  .wordmark {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #fff 30%, var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .wordmark span { -webkit-text-fill-color: var(--accent-2); }
+  .tagline { color: var(--muted); font-size: 0.95rem; font-weight: 400; letter-spacing: 0.02em; }
+
+  /* ── Search ── */
+  .search-wrap { width: 100%; max-width: 640px; margin-bottom: 12px; }
+  .search-box {
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-box:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+  }
+  .search-icon {
+    display: flex; align-items: center; padding: 0 14px 0 18px;
+    color: var(--muted-2);
+  }
+  .search-icon svg { width: 18px; height: 18px; }
+  input {
+    flex: 1; padding: 16px 8px; background: transparent;
+    color: var(--text); font-size: 0.95rem; font-family: 'DM Sans', sans-serif;
+    border: none; outline: none;
+  }
+  input::placeholder { color: var(--muted-2); }
+  .analyze-btn {
+    padding: 12px 24px; margin: 6px; background: var(--accent);
+    color: #fff; border: none; border-radius: 10px;
+    font-size: 0.9rem; font-weight: 600; font-family: 'Syne', sans-serif;
+    cursor: pointer; transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.02em; white-space: nowrap;
+  }
+  .analyze-btn:hover { background: #7c73ff; }
+  .analyze-btn:active { transform: scale(0.97); }
+  .analyze-btn:disabled { background: var(--muted-2); cursor: not-allowed; transform: none; }
+
+  /* ── Optional topic ── */
+  .topic-row {
+    display: flex; gap: 8px; width: 100%; max-width: 640px;
+    margin-bottom: 36px;
+  }
+  .topic-input {
+    flex: 1; padding: 10px 16px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-size: 0.85rem; font-family: 'DM Sans', sans-serif;
+    outline: none; transition: border-color 0.2s;
+  }
+  .topic-input::placeholder { color: var(--muted-2); }
+  .topic-input:focus { border-color: rgba(108,99,255,0.5); }
+  .topic-label {
+    display: flex; align-items: center; padding: 0 14px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--muted); font-size: 0.78rem;
+    font-weight: 500; white-space: nowrap; letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* ── Spinner ── */
+  .spinner {
+    display: none; flex-direction: column; align-items: center;
+    gap: 16px; padding: 48px 0; color: var(--muted);
+  }
+  .spin-ring {
+    width: 40px; height: 40px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  .spin-text { font-size: 0.85rem; letter-spacing: 0.04em; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Error ── */
+  .error-bar {
+    display: none; width: 100%; max-width: 640px;
+    padding: 14px 18px; background: var(--red-bg);
+    border: 1px solid var(--red-border); border-radius: 12px;
+    color: var(--red); font-size: 0.9rem; margin-bottom: 24px;
+  }
+
+  /* ── Result card ── */
+  .result {
+    display: none; width: 100%; max-width: 640px;
+    animation: fadeUp 0.4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Verdict */
+  .verdict {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 18px 20px; border-radius: 14px;
+    margin-bottom: 20px; border: 1px solid;
+  }
+  .verdict.yes { background: var(--green-bg); border-color: var(--green-border); }
+  .verdict.no  { background: var(--red-bg);   border-color: var(--red-border); }
+  .verdict-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+  }
+  .yes .verdict-dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .no  .verdict-dot { background: var(--red);   box-shadow: 0 0 8px var(--red); }
+  .verdict-body {}
+  .verdict-label {
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .yes .verdict-label { color: var(--green); }
+  .no  .verdict-label { color: var(--red); }
+  .verdict-text { color: var(--text); font-size: 0.95rem; line-height: 1.5; }
+
+  /* Summary */
+  .summary {
+    color: rgba(240,238,255,0.65);
+    font-size: 0.9rem; line-height: 1.7;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Tags */
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .tag {
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 0.78rem; font-weight: 500; letter-spacing: 0.02em;
+  }
+  .tag-difficulty {
+    background: rgba(108,99,255,0.15); color: var(--accent-2);
+    border: 1px solid rgba(108,99,255,0.25);
+  }
+  .tag-keyword {
+    background: rgba(255,255,255,0.05); color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .tag-keyword:hover { border-color: var(--border-hover); color: var(--text); }
+
+  /* Metrics row */
+  .metrics {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-bottom: 24px;
+  }
+  .metric-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .metric-label {
+    font-size: 0.72rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 500;
+  }
+  .metric-value {
+    font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700;
+    color: var(--text);
+  }
+  .metric-value.accent { color: var(--accent-2); }
+  .score-bar-wrap {
+    height: 4px; background: var(--border); border-radius: 2px;
+    margin-top: 8px; overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border-radius: 2px; width: 0%; transition: width 1.2s cubic-bezier(0.22,1,0.36,1);
+  }
+
+  /* Topic match */
+  .topic-match {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 24px;
+    font-size: 0.88rem; color: rgba(240,238,255,0.7); line-height: 1.5;
+  }
+  .topic-match-label {
+    font-size: 0.72rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.08em; margin-bottom: 6px; font-weight: 500;
+  }
+
+  /* Segments */
+  .segments-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 12px;
+  }
+  .segments-title {
+    font-size: 0.72rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.1em; font-weight: 500;
+  }
+  .segments-line {
+    flex: 1; height: 1px; background: var(--border);
+  }
+  .segment {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+    transition: padding-left 0.15s;
+  }
+  .segment:last-child { border-bottom: none; }
+  .segment:hover { padding-left: 4px; }
+  .seg-times {
+    display: flex; align-items: center; gap: 6px;
+    flex-shrink: 0; padding-top: 1px;
+  }
+  .seg-time {
+    font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
+    color: var(--accent-2); font-weight: 500;
+    background: rgba(167,139,250,0.1); padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .seg-arrow { color: var(--muted-2); font-size: 0.75rem; }
+  .seg-topic { font-size: 0.88rem; color: rgba(240,238,255,0.75); line-height: 1.4; }
+
+  .no-segments { color: var(--muted-2); font-size: 0.85rem; padding: 12px 0; }
 </style>
 </head>
 <body>
-<h1>Study<span>Sift</span></h1>
-<p class="sub">Should you watch this? Find out in seconds.</p>
 
-<div class="search-box">
-  <input id="url" type="text" placeholder="Paste a YouTube URL..." />
-  <button id="btn" onclick="analyze()">Analyze</button>
+<header class="header">
+  <div class="wordmark">Study<span>Sift</span></div>
+  <p class="tagline">Should you watch this? Find out in seconds.</p>
+</header>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <span class="search-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14.5 2.5a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/>
+        <path d="M10 10 4 16"/>
+      </svg>
+    </span>
+    <input id="url" type="text" placeholder="Paste a YouTube URL…" />
+    <button class="analyze-btn" id="btn" onclick="analyze()">Analyze</button>
+  </div>
 </div>
+
+<div class="topic-row">
+  <span class="topic-label">Topic?</span>
+  <input class="topic-input" id="topic" type="text" placeholder="e.g. dynamic programming, gradient descent…" />
+</div>
+
+<div class="error-bar" id="error-bar"></div>
 
 <div class="spinner" id="spinner">
-  <div class="spin"></div>
-  <span>Analyzing video...</span>
+  <div class="spin-ring"></div>
+  <span class="spin-text">Analyzing transcript…</span>
 </div>
 
-<div class="card" id="card">
+<div class="result" id="result">
   <div class="verdict" id="verdict">
-    <span class="verdict-icon" id="verdict-icon"></span>
-    <span id="verdict-text"></span>
+    <div class="verdict-dot"></div>
+    <div class="verdict-body">
+      <div class="verdict-label" id="verdict-label"></div>
+      <div class="verdict-text" id="verdict-text"></div>
+    </div>
   </div>
+
   <p class="summary" id="summary"></p>
+
   <div class="tags" id="tags"></div>
-  <div class="score-row">
-    <span class="score-label">Efficiency score</span>
-    <div class="score-bar"><div class="score-fill" id="score-fill" style="width:0%"></div></div>
-    <span class="score-num" id="score-num">0</span>
+
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="metric-label">Efficiency score</div>
+      <div class="metric-value accent" id="score-num">—</div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-fill" id="score-fill"></div>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Duration</div>
+      <div class="metric-value" id="duration">—</div>
+    </div>
   </div>
-  <div class="segments">
-    <h3>Key segments</h3>
-    <div id="segments"></div>
+
+  <div class="topic-match" id="topic-match-card" style="display:none">
+    <div class="topic-match-label">Topic match</div>
+    <div id="topic-match-text"></div>
   </div>
+
+  <div class="segments-header">
+    <span class="segments-title">Key segments</span>
+    <div class="segments-line"></div>
+  </div>
+  <div id="segments"></div>
 </div>
 
 <script>
 async function analyze() {
   const url = document.getElementById('url').value.trim();
-  if (!url) return;
-  document.getElementById('btn').disabled = true;
-  document.getElementById('card').style.display = 'none';
-  document.getElementById('spinner').style.display = 'flex';
+  const topic = document.getElementById('topic').value.trim();
+  const errorBar = document.getElementById('error-bar');
+  const btn = document.getElementById('btn');
+  const result = document.getElementById('result');
+  const spinner = document.getElementById('spinner');
+
+  errorBar.style.display = 'none';
+  errorBar.textContent = '';
+
+  if (!url) {
+    errorBar.textContent = 'Please paste a YouTube URL first.';
+    errorBar.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  result.style.display = 'none';
+  spinner.style.display = 'flex';
 
   try {
+    const body = { url };
+    if (topic) body.topic = topic;
+
     const res = await fetch('http://localhost:8000/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url })
+      body: JSON.stringify(body)
     });
-    const data = await res.json();
 
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || `HTTP ${res.status}`);
+    }
+
+    const d = await res.json();
+
+    // Verdict
     const verdict = document.getElementById('verdict');
-    verdict.className = 'verdict ' + (data.should_watch ? 'yes' : 'no');
-    document.getElementById('verdict-icon').textContent = data.should_watch ? '✅' : '⛔';
-    document.getElementById('verdict-text').textContent = data.should_watch ? 'Yes, watch this — ' + data.reason : 'Skip it — ' + data.reason;
-    document.getElementById('summary').textContent = data.summary;
+    verdict.className = 'verdict ' + (d.should_watch ? 'yes' : 'no');
+    document.getElementById('verdict-label').textContent = d.should_watch ? 'Watch this' : 'Skip it';
+    document.getElementById('verdict-text').textContent = d.reason || '';
 
+    // Summary
+    document.getElementById('summary').textContent = d.summary || '';
+
+    // Tags
     const tags = document.getElementById('tags');
-    tags.innerHTML = `<span class="tag difficulty">${data.difficulty}</span>` +
-      data.keywords.map(k => `<span class="tag keyword">${k}</span>`).join('');
+    const diff = d.difficulty ? `<span class="tag tag-difficulty">${d.difficulty}</span>` : '';
+    const kws = (d.keywords || []).map(k => `<span class="tag tag-keyword">${k}</span>`).join('');
+    tags.innerHTML = diff + kws;
 
-    document.getElementById('score-num').textContent = data.efficiency_score + '%';
-    setTimeout(() => document.getElementById('score-fill').style.width = data.efficiency_score + '%', 100);
+    // Metrics
+    document.getElementById('score-num').textContent = (d.efficiency_score ?? '—') + (d.efficiency_score != null ? '%' : '');
+    document.getElementById('duration').textContent = d.total_duration_minutes ? d.total_duration_minutes + ' min' : '—';
+    setTimeout(() => {
+      document.getElementById('score-fill').style.width = (d.efficiency_score || 0) + '%';
+    }, 120);
 
+    // Topic match
+    const tmCard = document.getElementById('topic-match-card');
+    if (d.topic_match) {
+      document.getElementById('topic-match-text').textContent = d.topic_match;
+      tmCard.style.display = 'block';
+    } else {
+      tmCard.style.display = 'none';
+    }
+
+    // Segments
     const segs = document.getElementById('segments');
-    segs.innerHTML = data.useful_segments.length
-      ? data.useful_segments.map(s => `<div class="segment"><span class="time">${s.start} → ${s.end}</span><span class="topic">${s.topic}</span></div>`).join('')
-      : '<p style="color:#555;font-size:0.9rem">No key segments found</p>';
+    segs.innerHTML = d.useful_segments && d.useful_segments.length
+      ? d.useful_segments.map(s => `
+          <div class="segment">
+            <div class="seg-times">
+              <span class="seg-time">${s.start}</span>
+              <span class="seg-arrow">→</span>
+              <span class="seg-time">${s.end}</span>
+            </div>
+            <span class="seg-topic">${s.topic}</span>
+          </div>`).join('')
+      : '<p class="no-segments">No key segments identified.</p>';
 
-    document.getElementById('card').style.display = 'block';
+    result.style.display = 'block';
   } catch(e) {
-    alert('Error: ' + e.message);
+    errorBar.textContent = 'Error: ' + e.message;
+    errorBar.style.display = 'block';
+    result.style.display = 'none';
   } finally {
-    document.getElementById('spinner').style.display = 'none';
-    document.getElementById('btn').disabled = false;
+    spinner.style.display = 'none';
+    btn.disabled = false;
   }
 }
 
 document.getElementById('url').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
+document.getElementById('topic').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
 </script>
 </body>
 </html>
