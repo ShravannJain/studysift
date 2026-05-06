@@ -1,0 +1,7 @@
+timestamp,url,decision,was_correct
+2026-05-06T22:05:28.705203,https://www.youtube.com/watch?v=TQMbvJNRpLE,watch,True
+2026-05-06T22:06:08.600790,https://www.youtube.com/watch?v=TQMbvJNRpLE,watch,False
+2026-05-06T22:06:10.957417,https://www.youtube.com/watch?v=TQMbvJNRpLE,watch,False
+2026-05-06T22:06:11.415028,https://www.youtube.com/watch?v=TQMbvJNRpLE,watch,False
+2026-05-06T22:06:11.869312,https://www.youtube.com/watch?v=TQMbvJNRpLE,watch,False
+2026-05-06T22:10:16.627530,https://www.youtube.com/watch?v=zm5Ht9KneDs,skip,True

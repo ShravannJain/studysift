@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "StudySift",
   "version": "1.0",
-  "description": "Should I watch this?",
+  "description": "Should I watch this? AI-powered video analyzer.",
   "permissions": [
     "activeTab",
     "tabs",
@@ -10,6 +10,9 @@
   ],
   "browser_action": {
     "default_popup": "popup.html",
-    "default_title": "StudySift"
+    "default_title": "StudySift",
+    "default_icon": {
+      "48": "icon.png"
+    }
   }
 }

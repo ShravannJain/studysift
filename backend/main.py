@@ -336,6 +336,7 @@ async def feedback(req: FeedbackRequest):
         "was_correct": req.was_correct,
     }
     path = "data/feedback.csv"
+    os.makedirs("data",exist_ok=True)
     write_header = not os.path.exists(path)
     with open(path, "a", newline="") as f:
         w = csv.DictWriter(f, fieldnames=row.keys())

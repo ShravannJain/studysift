@@ -1,105 +1,478 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudySift</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg:        #090909;
+      --bg-1:      #111113;
+      --bg-2:      #18181c;
+      --bg-3:      #1f1f25;
+      --border:    rgba(255,255,255,0.07);
+      --border-hi: rgba(255,255,255,0.13);
+      --text:      #e8e8ec;
+      --text-2:    #8c8c99;
+      --text-3:    #52525e;
+      --watch:     #22c55e;
+      --watch-bg:  rgba(34,197,94,0.08);
+      --watch-bdr: rgba(34,197,94,0.2);
+      --skip:      #ef4444;
+      --skip-bg:   rgba(239,68,68,0.08);
+      --skip-bdr:  rgba(239,68,68,0.2);
+      --accent:    #818cf8;
+      --accent-bg: rgba(129,140,248,0.08);
+      --yellow:    #fbbf24;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      width: 340px;
-      min-height: 200px;
-      font-family: system-ui, sans-serif;
-      padding: 16px;
-      margin: 0;
-      background: #0f0f0f;
-      color: #eee;
+      width: 360px;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      font-size: 13px;
     }
-    #decision {
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 4px;
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
     }
-    .watch { color: #4ade80; }
-    .skip  { color: #f87171; }
-    #reason { font-size: 13px; color: #aaa; margin-bottom: 12px; }
-    #score  { font-size: 12px; color: #888; margin-bottom: 12px; }
-    #segments { padding-left: 16px; font-size: 12px; color: #ccc; margin-bottom: 14px; }
-    #segments li { margin-bottom: 4px; }
-    .topic-row { display: flex; gap: 8px; margin-bottom: 12px; }
-    #topic-input {
-      flex: 1;
-      background: #1e1e1e;
-      border: 1px solid #333;
-      border-radius: 6px;
-      color: #eee;
-      padding: 6px 10px;
-      font-size: 12px;
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: -0.3px;
+      color: var(--text);
     }
-    #topic-btn {
-      background: #333;
-      border: none;
-      border-radius: 6px;
-      color: #eee;
-      padding: 6px 12px;
-      font-size: 12px;
-      cursor: pointer;
+    .logo span { color: var(--accent); }
+    .header-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--text-3);
+      transition: background 0.3s;
     }
-    #topic-btn:hover { background: #444; }
-    .feedback-row { display: flex; gap: 10px; align-items: center; }
-    .thumb {
-      background: #1e1e1e;
-      border: 1px solid #333;
-      border-radius: 6px;
-      color: #eee;
-      padding: 5px 14px;
-      font-size: 16px;
-      cursor: pointer;
+    .header-dot.active { background: var(--watch); box-shadow: 0 0 6px var(--watch); }
+
+    /* ── Scrollable body ── */
+    .body {
+      max-height: 520px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--bg-3) transparent;
     }
-    .thumb:hover { background: #2a2a2a; }
-    #feedback-msg { font-size: 11px; color: #666; }
-    #status { font-size: 13px; color: #888; padding: 20px 0; }
-    #keywords { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-    .kw {
-      background: #1e1e1e;
-      border: 1px solid #2a2a2a;
-      border-radius: 20px;
+    .body::-webkit-scrollbar { width: 3px; }
+    .body::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 99px; }
+
+    /* ── States ── */
+    .state { padding: 16px; }
+
+    /* Loading */
+    #state-loading { display: none; }
+    .loading-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 36px 0 28px;
+      gap: 16px;
+    }
+    .spinner-ring {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--bg-3);
+      border-top-color: var(--accent);
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-label {
+      font-family: 'DM Mono', monospace;
       font-size: 11px;
-      padding: 3px 10px;
-      color: #bbb;
+      color: var(--text-3);
+      letter-spacing: 0.08em;
     }
-    #topic-match {
+    .skeleton-lines { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+    .skel {
+      height: 10px; border-radius: 6px;
+      background: linear-gradient(90deg, var(--bg-2) 25%, var(--bg-3) 50%, var(--bg-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    .skel.w60 { width: 60%; }
+    .skel.w80 { width: 80%; }
+    .skel.w40 { width: 40%; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* Non-YouTube */
+    #state-nonyoutube { display: none; }
+    .nonyoutube-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      gap: 14px;
+      text-align: center;
+    }
+    .yt-icon {
+      width: 48px; height: 48px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .nonyoutube-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .nonyoutube-sub {
+      color: var(--text-3);
       font-size: 12px;
-      color: #facc15;
-      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    /* Error */
+    #state-error { display: none; }
+    .error-card {
+      background: rgba(239,68,68,0.05);
+      border: 1px solid rgba(239,68,68,0.15);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .error-icon { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+    .error-title { font-weight: 500; color: var(--skip); font-size: 13px; margin-bottom: 4px; }
+    .error-msg { color: var(--text-3); font-size: 12px; line-height: 1.5; }
+    .retry-btn {
+      margin-top: 12px;
+      background: var(--bg-2);
+      border: 1px solid var(--border-hi);
+      border-radius: 8px;
+      color: var(--text-2);
+      padding: 7px 14px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .retry-btn:hover { background: var(--bg-3); color: var(--text); }
+
+    /* Result */
+    #state-result { display: none; }
+
+    /* Verdict card */
+    .verdict-card {
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .verdict-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .verdict-card.watch {
+      background: var(--watch-bg);
+      border-color: var(--watch-bdr);
+    }
+    .verdict-card.skip {
+      background: var(--skip-bg);
+      border-color: var(--skip-bdr);
+    }
+    .verdict-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .verdict-label {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -0.5px;
+    }
+    .verdict-label.watch { color: var(--watch); }
+    .verdict-label.skip  { color: var(--skip); }
+    .verdict-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+    .verdict-badge.watch { background: rgba(34,197,94,0.12); color: var(--watch); }
+    .verdict-badge.skip  { background: rgba(239,68,68,0.12); color: var(--skip); }
+    .verdict-reason { color: var(--text-2); font-size: 12px; line-height: 1.55; }
+
+    /* Meta row */
+    .meta-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .meta-chip {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--text-2);
+    }
+    .meta-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+
+    /* Section label */
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      color: var(--text-3);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    /* Keywords */
+    .keywords-wrap { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+    .kw-pill {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11px;
+      color: var(--text-2);
+      transition: all 0.15s;
+      cursor: default;
+    }
+    .kw-pill:hover { background: var(--bg-3); color: var(--text); border-color: var(--border-hi); }
+
+    /* Segments */
+    .segments-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .segment-card {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      transition: border-color 0.15s;
+    }
+    .segment-card:hover { border-color: var(--border-hi); }
+    .seg-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--accent);
+      white-space: nowrap;
+      padding-top: 1px;
+      flex-shrink: 0;
+    }
+    .seg-topic { color: var(--text-2); font-size: 12px; line-height: 1.45; }
+
+    /* Topic match */
+    .topic-match-card {
+      background: rgba(251,191,36,0.05);
+      border: 1px solid rgba(251,191,36,0.15);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
       display: none;
     }
-    #error { color: #f87171; font-size: 12px; }
+    .topic-match-label { font-size: 10px; color: var(--yellow); font-family: 'DM Mono', monospace; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .topic-match-text { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+
+    /* Topic search */
+    .topic-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .topic-input {
+      flex: 1;
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      padding: 8px 12px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .topic-input::placeholder { color: var(--text-3); }
+    .topic-input:focus { border-color: var(--accent); }
+    .topic-btn {
+      background: var(--bg-2);
+      border: 1px solid var(--border-hi);
+      border-radius: 9px;
+      color: var(--text-2);
+      padding: 8px 14px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .topic-btn:hover { background: var(--bg-3); color: var(--text); }
+    .topic-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Feedback */
+    .feedback-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .feedback-label { font-size: 11px; color: var(--text-3); flex: 1; }
+    .thumb-btn {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      line-height: 1;
+    }
+    .thumb-btn:hover { background: var(--bg-3); border-color: var(--border-hi); transform: scale(1.05); }
+    .thumb-btn.active-up   { background: var(--watch-bg); border-color: var(--watch-bdr); }
+    .thumb-btn.active-down { background: var(--skip-bg);  border-color: var(--skip-bdr); }
+    .feedback-msg { font-size: 11px; color: var(--text-3); }
+
+    /* Divider */
+    .divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+    /* Animate in */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim { animation: fadeUp 0.25s ease both; }
+    .anim-d1 { animation-delay: 0.04s; }
+    .anim-d2 { animation-delay: 0.08s; }
+    .anim-d3 { animation-delay: 0.12s; }
+    .anim-d4 { animation-delay: 0.16s; }
   </style>
 </head>
 <body>
-  <div id="status">Analyzing...</div>
-  <div id="error"></div>
 
-  <div id="result" style="display:none">
-    <div id="decision"></div>
-    <div id="reason"></div>
-    <div id="score"></div>
-    <div id="topic-match"></div>
+<div class="header">
+  <div class="logo">Study<span>Sift</span></div>
+  <div class="header-dot" id="status-dot"></div>
+</div>
 
-    <div id="keywords"></div>
+<div class="body">
 
-    <ul id="segments"></ul>
-
-    <div class="topic-row">
-      <input id="topic-input" type="text" placeholder="Does it cover a specific topic?">
-      <button id="topic-btn">Ask</button>
-    </div>
-
-    <div class="feedback-row">
-      <button class="thumb" id="thumb-up">👍</button>
-      <button class="thumb" id="thumb-down">👎</button>
-      <span id="feedback-msg"></span>
+  <!-- LOADING -->
+  <div class="state" id="state-loading">
+    <div class="loading-inner">
+      <div class="spinner-ring"></div>
+      <div class="loading-label">ANALYZING VIDEO...</div>
+      <div class="skeleton-lines">
+        <div class="skel w80"></div>
+        <div class="skel w60"></div>
+        <div class="skel w40"></div>
+      </div>
     </div>
   </div>
 
-  <script src="popup.js"></script>
+  <!-- NON-YOUTUBE -->
+  <div class="state" id="state-nonyoutube">
+    <div class="nonyoutube-inner">
+      <div class="yt-icon">▶</div>
+      <div class="nonyoutube-title">No video detected</div>
+      <div class="nonyoutube-sub">Open a YouTube video to use StudySift and get an instant AI verdict.</div>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="state" id="state-error">
+    <div class="error-card">
+      <div class="error-icon">⚠</div>
+      <div>
+        <div class="error-title">Something went wrong</div>
+        <div class="error-msg" id="error-msg">Cannot reach backend. Is uvicorn running?</div>
+        <button class="retry-btn" id="retry-btn">↻ Retry</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="state" id="state-result">
+
+    <!-- Verdict -->
+    <div class="verdict-card anim" id="verdict-card">
+      <div class="verdict-top">
+        <div class="verdict-label" id="verdict-label">WATCH</div>
+        <div class="verdict-badge" id="verdict-badge">AI VERDICT</div>
+      </div>
+      <div class="verdict-reason" id="verdict-reason"></div>
+    </div>
+
+    <!-- Meta chips -->
+    <div class="meta-row anim anim-d1" id="meta-row">
+      <div class="meta-chip"><span class="dot"></span><span id="meta-efficiency"></span></div>
+      <div class="meta-chip"><span id="meta-duration"></span></div>
+      <div class="meta-chip" id="meta-difficulty"></div>
+    </div>
+
+    <!-- Topic match -->
+    <div class="topic-match-card anim anim-d2" id="topic-match-card">
+      <div class="topic-match-label">TOPIC MATCH</div>
+      <div class="topic-match-text" id="topic-match-text"></div>
+    </div>
+
+    <!-- Keywords -->
+    <div class="anim anim-d2">
+      <div class="section-label">Topics</div>
+      <div class="keywords-wrap" id="keywords-wrap"></div>
+    </div>
+
+    <!-- Segments -->
+    <div class="anim anim-d3" id="segments-section">
+      <div class="section-label">Key Segments</div>
+      <div class="segments-list" id="segments-list"></div>
+    </div>
+
+    <div class="divider anim anim-d3"></div>
+
+    <!-- Topic search -->
+    <div class="anim anim-d3">
+      <div class="section-label" style="margin-bottom:8px">Ask about a topic</div>
+      <div class="topic-row">
+        <input class="topic-input" id="topic-input" type="text" placeholder="e.g. dynamic programming…">
+        <button class="topic-btn" id="topic-btn">Ask</button>
+      </div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="feedback-row anim anim-d4">
+      <span class="feedback-label">Was this verdict helpful?</span>
+      <button class="thumb-btn" id="thumb-up">👍</button>
+      <button class="thumb-btn" id="thumb-down">👎</button>
+      <span class="feedback-msg" id="feedback-msg"></span>
+    </div>
+
+  </div><!-- /state-result -->
+
+</div><!-- /body -->
+
+<script src="popup.js"></script>
 </body>
 </html>
