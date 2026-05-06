@@ -10,6 +10,8 @@ import os
 import hashlib
 import time
 import logging
+import csv
+from datetime import datetime
 from functools import lru_cache
 from typing import Optional
 
@@ -132,7 +134,10 @@ class AnalyzeResponse(BaseModel):
     total_duration_minutes: float
     cached: bool = False   # tells the frontend whether this came from cache
 
-
+class FeedbackRequest(BaseModel):
+    url: str
+    decision: str        # "watch" or "skip"
+    was_correct: bool   
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def get_video_id(url: str) -> str | None:
@@ -177,7 +182,7 @@ def condense_long_transcript(timed_text: str) -> str:
     for chunk in chunks:
         r = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
-            max_tokens=300,
+            max_tokens=120,
             temperature=0.2,
             messages=[{
                 "role": "user",
@@ -233,7 +238,7 @@ async def analyze(req: AnalyzeRequest):
     total_minutes = round(total_seconds / 60, 1)
 
     # 5. Condense if very long
-    prompt_text = timed_text if len(timed_text) <= 80_000 else condense_long_transcript(timed_text)
+    prompt_text = " ".join(timed_text.split()[:1500])
 
     # 6. Build prompt
     topic_instruction = ""
@@ -321,3 +326,20 @@ async def cache_stats():
         "memory_cache_entries": len(_memory_cache),
         "cache_ttl_seconds": CACHE_TTL,
     }
+    
+@app.post("/feedback")
+async def feedback(req: FeedbackRequest):
+    row = {
+        "timestamp": datetime.now().isoformat(),
+        "url": req.url,
+        "decision": req.decision,
+        "was_correct": req.was_correct,
+    }
+    path = "data/feedback.csv"
+    write_header = not os.path.exists(path)
+    with open(path, "a", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=row.keys())
+        if write_header:
+            w.writeheader()
+        w.writerow(row)
+    return {"ok": True}
